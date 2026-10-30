@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruang Kita ❤️</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #ffe0ec, #fff5f8, #fbd3e5, #ffd6e8);
+    background-size: 300% 300%;
+    animation: bgmove 14s ease infinite;
+    color: #543344;
+    min-height: 100vh;
+    padding: 20px;
+}
+@keyframes bgmove { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+/* ===== HATI MELAYANG ===== */
+#hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.fh {
+    position: absolute; bottom: -50px; opacity: 0;
+    animation: floatUp linear forwards;
+}
+@keyframes floatUp {
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: .85; }
+    50%  { transform: translateY(-55vh) translateX(25px) rotate(12deg); }
+    100% { transform: translateY(-115vh) translateX(-20px) rotate(-12deg); opacity: 0; }
+}
+.burst {
+    position: fixed; pointer-events: none; z-index: 60;
+    animation: burst .9s ease-out forwards;
+}
+@keyframes burst {
+    to { transform: translate(var(--dx), var(--dy)) scale(1.4); opacity: 0; }
+}
+
+/* ===== INTRO ===== */
+#intro {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 28px; text-align: center;
+    background: radial-gradient(circle at 50% 35%, #fff0f6, #ffc9df 70%, #f7a8c8);
+    transition: opacity .8s ease, transform .8s ease, visibility .8s;
+}
+#intro.leave { opacity: 0; transform: scale(1.15); visibility: hidden; }
+
+.big-heart {
+    font-size: 96px; line-height: 1;
+    animation: beat 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 10px 18px rgba(232, 67, 131, .45));
+    cursor: pointer; user-select: none;
+}
+@keyframes beat {
+    0%,100% { transform: scale(1); }
+    14% { transform: scale(1.22); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.14); }
+    70% { transform: scale(1); }
+}
+
+#introText {
+    min-height: 130px; max-width: 420px; margin: 26px 0 18px;
+    font-size: 23px; line-height: 1.55; font-weight: bold; color: #b0245f;
+}
+#introText::after { content: "|"; animation: blink .7s steps(1) infinite; margin-left: 2px; }
+#introText.done::after { content: ""; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.dots { display: flex; gap: 8px; margin-bottom: 20px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: #f5a9c8; transition: all .3s; }
+.dots i.on { background: #e84383; transform: scale(1.4); }
+
+#nextBtn { min-width: 210px; box-shadow: 0 6px 18px rgba(232, 67, 131, .4); }
+#nextBtn.pulse { animation: wiggle 1.6s ease-in-out infinite; }
+@keyframes wiggle {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.07); }
+}
+#skipBtn {
+    background: none; color: #a5456f; font-size: 13px; font-weight: normal;
+    margin-top: 12px; text-decoration: underline; padding: 6px;
+}
+
+/* ===== HALAMAN UTAMA ===== */
+.container {
+    position: relative; z-index: 2;
+    max-width: 650px; margin: 25px auto; background: white;
+    padding: 25px; border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(180, 70, 120, 0.15);
+}
+.container.reveal { animation: reveal .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes reveal {
+    from { opacity: 0; transform: translateY(40px) scale(.96); }
+    to   { opacity: 1; transform: none; }
+}
+
+h1 { text-align: center; color: #e84383; margin-bottom: 12px; }
+h2 { color: #d63384; margin-bottom: 15px; }
+.subtitle { text-align: center; color: #916779; line-height: 1.7; margin-bottom: 22px; }
+.heart {
+    text-align: center; font-size: 45px; margin-bottom: 12px;
+    animation: beat 1.4s ease-in-out infinite;
+}
+
+label { display: block; font-weight: bold; margin-bottom: 8px; }
+
+input, textarea {
+    width: 100%; border: 1px solid #f1b8d0; border-radius: 12px;
+    padding: 13px; font-size: 16px; margin-bottom: 18px; outline: none;
+    background: #fffafd; color: #543344; font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
+}
+input:focus, textarea:focus { border-color: #e84383; box-shadow: 0 0 0 3px #ffd3e5; }
+textarea { resize: vertical; min-height: 85px; }
+
+.question {
+    background: #fff4f8; padding: 15px; border-radius: 14px;
+    margin-bottom: 17px; border: 1px solid #fce0eb;
+    transition: transform .2s, box-shadow .2s;
+}
+.question:focus-within { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(232, 67, 131, .15); }
+.question p { font-weight: bold; margin-bottom: 12px; line-height: 1.5; }
+.question p span { margin-right: 4px; }
+
+button {
+    border: none; border-radius: 12px; padding: 14px 18px;
+    background: #e84383; color: white; font-size: 16px; font-weight: bold;
+    cursor: pointer; transition: transform .15s, filter .15s;
+}
+button:hover { filter: brightness(.95); transform: translateY(-1px); }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible { outline: 3px solid #7950a1; outline-offset: 2px; }
+
+.primary { width: 100%; }
+.secondary { background: #7950a1; }
+.danger { background: #d93656; }
+.hidden { display: none !important; }
+
+.progress { height: 8px; background: #fde0ec; border-radius: 8px; margin-bottom: 22px; overflow: hidden; }
+.progress div { height: 100%; width: 0; background: linear-gradient(90deg, #f78fb8, #e84383); transition: width .4s; }
+.progress-label { text-align: center; font-size: 13px; color: #987b89; margin: -14px 0 20px; }
+
+.message { padding: 13px; border-radius: 10px; margin: 15px 0; line-height: 1.5; overflow-wrap: anywhere; }
+.success { background: #e4f8ec; color: #176b3a; }
+.error { background: #ffe8ec; color: #a51d3d; }
+.info { background: #fff4d8; color: #805500; }
+
+.answer-card { background: #fff5f9; padding: 16px; margin: 15px 0; border-radius: 14px; border: 1px solid #f5c7da; }
+.answer-card h3 { color: #d63384; margin-bottom: 8px; overflow-wrap: anywhere; }
+.answer-card p { line-height: 1.7; overflow-wrap: anywhere; }
+.answer-card pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: Arial, sans-serif; line-height: 1.7; margin-top: 12px; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.actions button { font-size: 14px; padding: 10px 12px; }
+.small { text-align: center; font-size: 13px; color: #987b89; margin-top: 22px; line-height: 1.6; }
+.top-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.top-actions button { flex: 1; }
+
+@media (max-width: 480px) {
+    body { padding: 10px; }
+    .container { padding: 19px; margin: 10px auto; }
+    h1 { font-size: 25px; }
+    #introText { font-size: 20px; }
+    .big-heart { font-size: 80px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    #hearts { display: none; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="hearts" aria-hidden="true"></div>
+
+<!-- LAYAR PEMBUKA -->
+<div id="intro">
+    <div class="big-heart" id="bigHeart" title="Colek aku 💗">💗</div>
+    <div id="introText" aria-live="polite"></div>
+    <div class="dots" id="dots"></div>
+    <button type="button" id="nextBtn">Lanjut 👉</button>
+    <button type="button" id="skipBtn">Lewati saja</button>
+</div>
+
+<!-- HALAMAN PERTANYAAN -->
+<div class="container hidden" id="homePage">
+    <div class="heart">💗</div>
+    <h1>Ruang Kita</h1>
+    <p class="subtitle">
+        Ada beberapa pertanyaan kecil untuk seseorang
+        yang sangat spesial. Jawab dengan jujur, ya. ❤️
+    </p>
+
+    <div class="progress"><div id="bar"></div></div>
+    <p class="progress-label" id="barLabel">0 dari 10 terjawab</p>
+
+    <form id="answerForm">
+        <label for="nama">Nama kamu</label>
+        <input type="text" id="nama" maxlength="100" placeholder="Tulis nama kamu..." required>
+
+        <div id="questions"></div>
+
+        <button type="submit" class="primary" id="sendButton">Kirim Jawaban ❤️</button>
+    </form>
+
+    <div id="formMessage" aria-live="polite"></div>
+    <p class="small">Dibuat dengan ❤️ untuk seseorang yang istimewa.</p>
+</div>
+
+<!-- HALAMAN ADMIN -->
+<div class="container hidden" id="adminPage">
+    <div class="heart">🔐</div>
+    <h1>Ruang Admin</h1>
+    <p class="subtitle">Masuk untuk melihat jawaban yang dikirim.</p>
+
+    <form id="loginForm">
+        <label for="adminEmail">Email admin</label>
+        <input type="email" id="adminEmail" placeholder="Email akun admin" autocomplete="username" required>
+
+        <label for="adminPassword">Password admin</label>
+        <input type="password" id="adminPassword" placeholder="Password akun admin" autocomplete="current-password" required>
+
+        <button type="submit" class="primary" id="loginButton">Login 🔑</button>
+    </form>
+
+    <div id="loginMessage" aria-live="polite"></div>
+
+    <div id="dashboard" class="hidden">
+        <h2>Jawaban yang Masuk 💌</h2>
+        <div class="top-actions">
+            <button type="button" id="refreshButton">Muat Ulang</button>
+            <button type="button" class="secondary" id="downloadButton">Unduh JSON</button>
+        </div>
+        <div id="answerList" aria-live="polite">Memuat jawaban...</div>
+        <button type="button" class="danger primary" id="logoutButton">Keluar</button>
+    </div>
+
+    <p class="small">Halaman admin hanya untuk pemilik website.</p>
+</div>
+
+<script>
+/* ===== PENGATURAN SUPABASE ===== */
+/* Catatan: URL harus berhenti di .supabase.co (tanpa /rest/v1/) */
+const SUPABASE_URL = "https://pajxrczqhijklfatkvqt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yMAzkTWHNTXHZEwrtRhTOA_btVqsNv9";
+
+/* ===== KONFIGURASI WEBSITE ===== */
+const QUESTIONS = [
+    "Apa hal pertama yang membuat kamu tertarik kepadaku?",
+    "Apa kenangan kita yang paling kamu sukai?",
+    "Apa yang membuat kamu merasa nyaman denganku?",
+    "Apa hal kecil dariku yang membuat kamu tersenyum?",
+    "Kalau kita bisa pergi bersama, kamu ingin ke mana?",
+    "Apa yang ingin kamu lakukan bersama denganku?",
+    "Apa yang kamu harapkan dari hubungan kita?",
+    "Apa yang harus aku perbaiki agar menjadi lebih baik?",
+    "Apa yang paling kamu takutkan dalam hubungan?",
+    "Apa pesan yang ingin kamu sampaikan kepadaku?"
+];
+
+/* Kata-kata pembuka (bebas kamu ubah) */
+const INTRO_LINES = [
+    "Halo, kamu! 👀 Iya, kamu yang lagi pegang HP itu.",
+    "Kamu pasti disuruh ke sini sama seseorang, kan? 😏 Tenang, ini bukan ujian CPNS kok.",
+    "Tapi jawabannya harus jujur ya. Hatiku punya alat pendeteksi bohong. Canggih. 💘",
+    "Jawab pelan-pelan aja. Nggak ada nilai merah, cuma ada nilai sayang. 🥹",
+    "Siap? Tarik napas dulu... jangan baper duluan ya! 🫣"
+];
+
+/* ===== KONEKSI ===== */
+const configurationMissing =
+    SUPABASE_URL === "TEMPEL_PROJECT_URL_DI_SINI" ||
+    SUPABASE_KEY === "TEMPEL_PUBLISHABLE_KEY_DI_SINI";
+
+let db = null;
+if (!configurationMissing) {
+    try {
+        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+/* ===== ELEMEN ===== */
+const $ = (id) => document.getElementById(id);
+const homePage = $("homePage"), adminPage = $("adminPage"), questionsElement = $("questions");
+const answerForm = $("answerForm"), formMessage = $("formMessage"), sendButton = $("sendButton");
+const loginForm = $("loginForm"), loginMessage = $("loginMessage"), loginButton = $("loginButton");
+const dashboard = $("dashboard"), answerList = $("answerList");
+const intro = $("intro"), introText = $("introText"), nextBtn = $("nextBtn");
+const heartsLayer = $("hearts");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ===== HATI MELAYANG ===== */
+const HEARTS = ["💗", "💖", "💕", "❤️", "💘", "🌸", "✨"];
+
+function spawnHeart() {
+    if (reduceMotion || document.hidden) return;
+    const h = document.createElement("span");
+    h.className = "fh";
+    h.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = 14 + Math.random() * 28 + "px";
+    h.style.animationDuration = 6 + Math.random() * 6 + "s";
+    h.addEventListener("animationend", () => h.remove());
+    heartsLayer.appendChild(h);
+}
+let heartTimer = setInterval(spawnHeart, 500);
+for (let i = 0; i < 8; i++) setTimeout(spawnHeart, i * 150);
+
+/* Ledakan hati saat layar disentuh */
+function burstAt(x, y, count) {
+    if (reduceMotion) return;
+    for (let i = 0; i < count; i++) {
+        const b = document.createElement("span");
+        b.className = "burst";
+        b.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 80;
+        b.style.left = x + "px";
+        b.style.top = y + "px";
+        b.style.fontSize = 14 + Math.random() * 14 + "px";
+        b.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+        b.style.setProperty("--dy", Math.sin(angle) * dist - 30 + "px");
+        b.addEventListener("animationend", () => b.remove());
+        document.body.appendChild(b);
+    }
+}
+document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("input, textarea")) return;
+    burstAt(e.clientX, e.clientY, 6);
+});
+
+/* ===== INTRO: KETIK + LANJUT ===== */
+let step = 0, typing = null;
+const dots = $("dots");
+INTRO_LINES.forEach(() => dots.appendChild(document.createElement("i")));
+
+function typeLine(text) {
+    clearInterval(typing);
+    introText.classList.remove("done");
+    introText.textContent = "";
+    nextBtn.disabled = true;
+    nextBtn.classList.remove("pulse");
+
+    [...dots.children].forEach((d, i) => d.classList.toggle("on", i === step));
+
+    const chars = [...text];
+    let i = 0;
+    const finish = () => {
+        clearInterval(typing);
+        introText.textContent = text;
+        introText.classList.add("done");
+        nextBtn.disabled = false;
+        nextBtn.classList.add("pulse");
+        nextBtn.textContent = step === INTRO_LINES.length - 1
+            ? "Masuk ke Ruang Kita ❤️" : "Lanjut 👉";
+    };
+    if (reduceMotion) return finish();
+
+    typing = setInterval(() => {
+        introText.textContent += chars[i++];
+        if (i >= chars.length) finish();
+    }, 38);
+}
+
+function nextStep() {
+    if (step >= INTRO_LINES.length - 1) return enterSite();
+    step++;
+    typeLine(INTRO_LINES[step]);
+    const r = $("bigHeart").getBoundingClientRect();
+    burstAt(r.left + r.width / 2, r.top + r.height / 2, 10);
+}
+
+function enterSite() {
+    clearInterval(typing);
+    const r = nextBtn.getBoundingClientRect();
+    burstAt(r.left + r.width / 2, r.top, 22);
+    intro.classList.add("leave");
+    homePage.classList.remove("hidden");
+    homePage.classList.add("reveal");
+    window.scrollTo(0, 0);
+    setTimeout(() => intro.remove(), 900);
+}
+
+nextBtn.addEventListener("click", nextStep);
+$("skipBtn").addEventListener("click", enterSite);
+$("bigHeart").addEventListener("click", (e) => {
+    burstAt(e.clientX, e.clientY, 14);
+});
+
+/* ===== PERTANYAAN ===== */
+const EMOJI = ["🌷", "📸", "🫶", "😊", "✈️", "🎈", "🌈", "🛠️", "🫣", "💌"];
+
+QUESTIONS.forEach((question, index) => {
+    const box = document.createElement("div");
+    box.className = "question";
+
+    const title = document.createElement("p");
+    const em = document.createElement("span");
+    em.textContent = EMOJI[index % EMOJI.length];
+    title.appendChild(em);
+    title.appendChild(document.createTextNode((index + 1) + ". " + question));
+
+    const textarea = document.createElement("textarea");
+    textarea.id = "answer" + index;
+    textarea.name = "answer" + index;
+    textarea.placeholder = "Tulis jawabanmu di sini...";
+    textarea.maxLength = 3000;
+    textarea.required = true;
+    textarea.addEventListener("input", updateProgress);
+
+    box.appendChild(title);
+    box.appendChild(textarea);
+    questionsElement.appendChild(box);
+});
+
+function updateProgress() {
+    let done = 0;
+    for (let i = 0; i < QUESTIONS.length; i++) {
+        if ($("answer" + i).value.trim()) done++;
+    }
+    $("bar").style.width = (done / QUESTIONS.length * 100) + "%";
+    $("barLabel").textContent = done === QUESTIONS.length
+        ? "Semua terjawab! Tinggal kirim 🥰"
+        : done + " dari " + QUESTIONS.length + " terjawab";
+}
+
+/* ===== PESAN ===== */
+function showMessage(element, message, type) {
+    element.textContent = message;
+    element.className = "message " + type;
+}
+function clearMessage(element) {
+    element.textContent = "";
+    element.className = "";
+}
+
+/* ===== NAVIGASI ===== */
+function showHome() {
+    adminPage.classList.add("hidden");
+    if (!document.body.contains(intro)) homePage.classList.remove("hidden");
+}
+function showAdmin() {
+    homePage.classList.add("hidden");
+    adminPage.classList.remove("hidden");
+    if (document.body.contains(intro)) intro.remove();
+}
+
+/* ===== KIRIM JAWABAN ===== */
+answerForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    clearMessage(formMessage);
+
+    if (!db) {
+        showMessage(formMessage, "Website belum terhubung ke Supabase. Periksa Project URL dan Publishable Key di kode.", "error");
+        return;
+    }
+
+    const nama = $("nama").value.trim();
+    if (!nama || nama.length > 100) {
+        showMessage(formMessage, "Silakan masukkan nama yang benar.", "error");
+        return;
+    }
+
+    const jawaban = {};
+    for (let i = 0; i < QUESTIONS.length; i++) {
+        const field = $("answer" + i);
+        const value = field.value.trim();
+        if (!value) {
+            showMessage(formMessage, "Jawab semua pertanyaan terlebih dahulu.", "error");
+            field.focus();
+            return;
+        }
+        jawaban[QUESTIONS[i]] = value;
+    }
+
+    sendButton.disabled = true;
+    sendButton.textContent = "Mengirim jawaban...";
+
+    try {
+        const { error } = await db.from("answers").insert([{ nama: nama, jawaban: jawaban }]);
+        if (error) throw error;
+
+        answerForm.reset();
+        updateProgress();
+        showMessage(formMessage, "Jawaban berhasil dikirim! Terima kasih sudah menjawab dengan jujur. ❤️", "success");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        /* Hujan hati perayaan */
+        for (let i = 0; i < 30; i++) setTimeout(spawnHeart, i * 80);
+        burstAt(window.innerWidth / 2, window.innerHeight / 2, 24);
+
+    } catch (error) {
+        console.error("Gagal mengirim jawaban:", error);
+        showMessage(formMessage, "Jawaban gagal dikirim. Periksa koneksi internet dan pengaturan database Supabase.", "error");
+    } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Kirim Jawaban ❤️";
+    }
+});
+
+/* ===== LOGIN ADMIN ===== */
+loginForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    clearMessage(loginMessage);
+
+    if (!db) {
+        showMessage(loginMessage, "Koneksi Supabase belum diatur.", "error");
+        return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent = "Memeriksa akun...";
+
+    try {
+        const { error } = await db.auth.signInWithPassword({
+            email: $("adminEmail").value.trim(),
+            password: $("adminPassword").value
+        });
+        if (error) throw error;
+
+        loginForm.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+        clearMessage(loginMessage);
+        await loadAnswers();
+
+    } catch (error) {
+        console.error("Login gagal:", error);
+        showMessage(loginMessage, "Login gagal. Periksa email, password, dan akun admin Supabase.", "error");
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Login 🔑";
+    }
+});
+
+/* ===== MEMUAT JAWABAN ===== */
+async function loadAnswers() {
+    answerList.textContent = "Memuat jawaban...";
+
+    try {
+        const { data, error } = await db
+            .from("answers")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+
+        answerList.replaceChildren();
+
+        if (!data || data.length === 0) {
+            answerList.textContent = "Belum ada jawaban yang masuk.";
+            return;
+        }
+
+        data.forEach(function (item) {
+            const card = document.createElement("div");
+            card.className = "answer-card";
+
+            const title = document.createElement("h3");
+            title.textContent = "💌 " + item.nama;
+
+            const date = document.createElement("p");
+            date.textContent = item.created_at
+                ? "Dikirim: " + new Date(item.created_at).toLocaleString("id-ID")
+                : "";
+
+            const content = document.createElement("pre");
+            content.textContent = Object.entries(item.jawaban || {})
+                .map((entry) => entry[0] + "\n" + entry[1])
+                .join("\n\n");
+
+            const actions = document.createElement("div");
+            actions.className = "actions";
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "danger";
+            deleteButton.textContent = "Hapus jawaban";
+
+            deleteButton.addEventListener("click", async function () {
+                if (!confirm("Apakah kamu yakin ingin menghapus jawaban ini?")) return;
+
+                deleteButton.disabled = true;
+                try {
+                    const { error } = await db.from("answers").delete().eq("id", item.id);
+                    if (error) throw error;
+                    await loadAnswers();
+                } catch (error) {
+                    console.error(error);
+                    alert("Jawaban gagal dihapus. Periksa kebijakan database.");
+                    deleteButton.disabled = false;
+                }
+            });
+
+            actions.appendChild(deleteButton);
+            card.appendChild(title);
+            card.appendChild(date);
+            card.appendChild(content);
+            card.appendChild(actions);
+            answerList.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error("Gagal memuat jawaban:", error);
+        answerList.textContent = "Jawaban tidak dapat dimuat. Pastikan kamu sudah login dan kebijakan keamanan database sudah benar.";
+    }
+}
+
+$("refreshButton").addEventListener("click", loadAnswers);
+
+/* ===== UNDUH JSON ===== */
+$("downloadButton").addEventListener("click", async function () {
+    try {
+        const { data, error } = await db
+            .from("answers")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+
+        const file = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "jawaban-ruang-kita.json";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error(error);
+        alert("Gagal mengunduh jawaban.");
+    }
+});
+
+/* ===== LOGOUT ===== */
+$("logoutButton").addEventListener("click", async function () {
+    const { error } = await db.auth.signOut();
+    if (error) {
+        alert("Gagal keluar. Silakan coba lagi.");
+        return;
+    }
+
+    dashboard.classList.add("hidden");
+    loginForm.classList.remove("hidden");
+    $("adminEmail").value = "";
+    $("adminPassword").value = "";
+    clearMessage(loginMessage);
+    showAdmin();
+});
+
+/* ===== ROUTING #admin ===== */
+function routePage() {
+    if (window.location.hash === "#admin") showAdmin();
+    else showHome();
+}
+window.addEventListener("hashchange", routePage);
+
+/* ===== SESI ADMIN ===== */
+async function checkSession() {
+    if (!db) return;
+    try {
+        const { data, error } = await db.auth.getSession();
+        if (error) throw error;
+
+        if (data.session && window.location.hash === "#admin") {
+            loginForm.classList.add("hidden");
+            dashboard.classList.remove("hidden");
+            await loadAnswers();
+        }
+    } catch (error) {
+        console.error("Gagal memeriksa sesi:", error);
+    }
+}
+
+/* ===== MULAI ===== */
+if (window.location.hash === "#admin") {
+    showAdmin();
+} else {
+    typeLine(INTRO_LINES[0]);
+}
+checkSession();
+</script>
+
+</body>
+</html>
