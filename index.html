@@ -12,13 +12,10 @@
 body {
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #ffe0ec, #fff5f8, #fbd3e5, #ffd6e8);
-    background-size: 300% 300%;
-    animation: bgmove 14s ease infinite;
     color: #543344;
     min-height: 100vh;
     padding: 20px;
 }
-@keyframes bgmove { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
 /* ===== HATI MELAYANG ===== */
 #hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
@@ -40,12 +37,26 @@ body {
     to { transform: translate(var(--dx), var(--dy)) scale(1.4); opacity: 0; }
 }
 
+/* ===== FOTO LATAR & ALAT ===== */
+#bgphoto {
+    position: fixed; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity 1.2s ease;
+}
+#bgphoto.on { opacity: 1; }
+#bgphoto::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 30, .08); }
+.tools { position: fixed; right: 12px; bottom: 12px; z-index: 70; display: flex; gap: 8px; }
+.tools button {
+    width: 46px; height: 46px; border-radius: 50%; padding: 0; font-size: 20px;
+    background: #fff; box-shadow: 0 4px 14px rgba(180, 70, 120, .35);
+}
+
 /* ===== INTRO ===== */
 #intro {
     position: fixed; inset: 0; z-index: 50;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 28px; text-align: center;
-    background: radial-gradient(circle at 50% 35%, #fff0f6, #ffc9df 70%, #f7a8c8);
+    background: radial-gradient(circle at 50% 35%, rgba(255,240,246,.5), rgba(255,201,223,.4) 70%, rgba(247,168,200,.35));
     transition: opacity .8s ease, transform .8s ease, visibility .8s;
 }
 #intro.leave { opacity: 0; transform: scale(1.15); visibility: hidden; }
@@ -53,7 +64,6 @@ body {
 .big-heart {
     font-size: 96px; line-height: 1;
     animation: beat 1.2s ease-in-out infinite;
-    filter: drop-shadow(0 10px 18px rgba(232, 67, 131, .45));
     cursor: pointer; user-select: none;
 }
 @keyframes beat {
@@ -90,7 +100,7 @@ body {
 /* ===== HALAMAN UTAMA ===== */
 .container {
     position: relative; z-index: 2;
-    max-width: 650px; margin: 25px auto; background: white;
+    max-width: 650px; margin: 25px auto; background: rgba(15, 25, 60, .25); color: #fff;
     padding: 25px; border-radius: 22px;
     box-shadow: 0 8px 30px rgba(180, 70, 120, 0.15);
 }
@@ -120,12 +130,47 @@ input:focus, textarea:focus { border-color: #e84383; box-shadow: 0 0 0 3px #ffd3
 textarea { resize: vertical; min-height: 85px; }
 
 .question {
-    background: #fff4f8; padding: 15px; border-radius: 14px;
-    margin-bottom: 17px; border: 1px solid #fce0eb;
-    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    background: rgba(255, 255, 255, .06);
+    padding: 15px; border-radius: 14px; margin-bottom: 17px;
+    border: 1px solid rgba(110, 190, 255, .8);
+    box-shadow: 0 0 8px rgba(70, 160, 255, .5);
+    transition: transform .2s;
 }
-.question:focus-within { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(232, 67, 131, .15); }
-.question p { font-weight: bold; margin-bottom: 12px; line-height: 1.5; }
+.question::before {
+    content: ""; position: absolute; inset: -1px; border-radius: 14px; pointer-events: none;
+    box-shadow: 0 0 22px rgba(100, 200, 255, .95), inset 0 0 14px rgba(100, 200, 255, .35);
+    opacity: .1; animation: glow 2.6s ease-in-out infinite;
+}
+.question:nth-child(even)::before { animation-delay: 1.2s; }
+@keyframes glow { 0%,100% { opacity: .1; } 50% { opacity: 1; } }
+.question::after {
+    content: "\2726"; position: absolute; top: 6px; right: 12px; pointer-events: none;
+    color: #cfeaff; font-size: 13px; animation: sparkle 1.8s ease-in-out infinite;
+}
+@keyframes sparkle { 0%,100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.3); } }
+.question:focus-within { transform: translateY(-2px); }
+.question p { font-weight: bold; margin-bottom: 12px; line-height: 1.5; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 40, .85); }
+.question textarea { background: rgba(255, 255, 255, .12); border-color: rgba(150, 210, 255, .6); color: #fff; }
+.question textarea::placeholder { color: rgba(255, 255, 255, .7); }
+
+/* Judul paling atas */
+.hero {
+    text-align: center; padding: 18px 16px 16px; margin-bottom: 22px;
+    border-radius: 18px; background: rgba(20, 10, 50, .5);
+    border: 1px solid rgba(255, 255, 255, .28);
+}
+.hero .heart { margin-bottom: 6px; }
+.hero h1 { font-size: 34px; letter-spacing: .5px; margin-bottom: 8px; }
+.hero .subtitle { max-width: 440px; margin: 0 auto; font-size: 15px; line-height: 1.6; }
+@media (max-width: 480px) { .hero h1 { font-size: 28px; } }
+
+/* Teks di atas foto */
+.container h1, .container h2 { color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .6); }
+.container .subtitle, .container label, .container .small, .container .progress-label {
+    color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .7);
+}
+.container .answer-card { color: #543344; text-shadow: none; background: rgba(255, 245, 249, .95); }
 .question p span { margin-right: 4px; }
 
 button {
@@ -179,7 +224,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid #7950a1; outline-
 
 <body>
 
+<div id="bgphoto" aria-hidden="true"></div>
 <div id="hearts" aria-hidden="true"></div>
+
+<div class="tools">
+    <button type="button" id="musicBtn" title="Musik" aria-label="Musik hidup atau mati">🎵</button>
+</div>
 
 <!-- LAYAR PEMBUKA -->
 <div id="intro">
@@ -192,12 +242,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid #7950a1; outline-
 
 <!-- HALAMAN PERTANYAAN -->
 <div class="container hidden" id="homePage">
-    <div class="heart">💗</div>
-    <h1>Ruang Kita</h1>
-    <p class="subtitle">
-        Ada beberapa pertanyaan kecil untuk seseorang
-        yang sangat spesial. Jawab dengan jujur, ya. ❤️
-    </p>
+    <header class="hero">
+        <div class="heart">💗</div>
+        <h1>Ruang Kita</h1>
+        <p class="subtitle">
+            Ada beberapa pertanyaan kecil untuk seseorang
+            yang sangat spesial. Jawab dengan jujur, ya. ❤️
+        </p>
+    </header>
 
     <div class="progress"><div id="bar"></div></div>
     <p class="progress-label" id="barLabel">0 dari 10 terjawab</p>
@@ -217,9 +269,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid #7950a1; outline-
 
 <!-- HALAMAN ADMIN -->
 <div class="container hidden" id="adminPage">
-    <div class="heart">🔐</div>
-    <h1>Ruang Admin</h1>
-    <p class="subtitle">Masuk untuk melihat jawaban yang dikirim.</p>
+    <header class="hero">
+        <div class="heart">🔐</div>
+        <h1>Ruang Admin</h1>
+        <p class="subtitle">Masuk untuk melihat jawaban yang dikirim.</p>
+    </header>
 
     <form id="loginForm">
         <label for="adminEmail">Email admin</label>
@@ -263,8 +317,18 @@ const QUESTIONS = [
     "Apa yang kamu harapkan dari hubungan kita?",
     "Apa yang harus aku perbaiki agar menjadi lebih baik?",
     "Apa yang paling kamu takutkan dalam hubungan?",
-    "Apa pesan yang ingin kamu sampaikan kepadaku?"
+    "Apa pesan yang ingin kamu sampaikan kepadaku?",
+    "Apa sifatku yang paling bikin kamu gemas?",
+    "Kapan kamu paling merindukanku?",
+    "Lagu apa yang mengingatkan kamu padaku?",
+    "Impian apa yang ingin kamu capai, dan bagaimana aku bisa mendukungmu?",
+    "Kalau bisa memutar waktu, momen kita yang mana yang ingin kamu ulang?"
 ];
+
+/* Hanya pemilik file yang bisa mengganti foto latar: taruh fotomu di folder yang sama, lalu tulis namanya. Contoh: "foto.jpg" */
+const FOTO_LATAR = "foto.jpg";
+/* Hanya pemilik file yang bisa mengganti musik: taruh file di folder yang sama. Contoh: "musik.mp3". Kosong = melodi bawaan */
+const FILE_MUSIK = "musik.mp3";
 
 /* Kata-kata pembuka (bebas kamu ubah) */
 const INTRO_LINES = [
@@ -303,7 +367,7 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").match
 const HEARTS = ["💗", "💖", "💕", "❤️", "💘", "🌸", "✨"];
 
 function spawnHeart() {
-    if (reduceMotion || document.hidden) return;
+    if (reduceMotion || document.hidden || heartsLayer.childElementCount > 12) return;
     const h = document.createElement("span");
     h.className = "fh";
     h.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
@@ -313,8 +377,8 @@ function spawnHeart() {
     h.addEventListener("animationend", () => h.remove());
     heartsLayer.appendChild(h);
 }
-let heartTimer = setInterval(spawnHeart, 500);
-for (let i = 0; i < 8; i++) setTimeout(spawnHeart, i * 150);
+let heartTimer = setInterval(spawnHeart, 1100);
+for (let i = 0; i < 4; i++) setTimeout(spawnHeart, i * 200);
 
 /* Ledakan hati saat layar disentuh */
 function burstAt(x, y, count) {
@@ -398,7 +462,7 @@ $("bigHeart").addEventListener("click", (e) => {
 });
 
 /* ===== PERTANYAAN ===== */
-const EMOJI = ["🌷", "📸", "🫶", "😊", "✈️", "🎈", "🌈", "🛠️", "🫣", "💌"];
+const EMOJI = ["🌷", "📸", "🫶", "😊", "✈️", "🎈", "🌈", "🛠️", "🫣", "💌", "🥰", "🌙", "🎶", "⭐", "⏳"];
 
 QUESTIONS.forEach((question, index) => {
     const box = document.createElement("div");
@@ -687,6 +751,112 @@ if (window.location.hash === "#admin") {
     typeLine(INTRO_LINES[0]);
 }
 checkSession();
+updateProgress();
+
+/* ===== FOTO LATAR ===== */
+const bgPhoto = $("bgphoto");
+
+function setBackground(src) {
+    const img = new Image();
+    img.onload = function () {
+        bgPhoto.style.backgroundImage = 'url("' + src + '")';
+        bgPhoto.classList.add("on");
+    };
+    img.onerror = function () { console.warn("Foto latar gagal dimuat"); };
+    img.src = src;
+}
+
+if (FOTO_LATAR) setBackground(FOTO_LATAR);
+
+/* ===== MUSIK ===== */
+/* Browser melarang suara otomatis, jadi musik mulai saat sentuhan pertama di web */
+const CHORDS = [
+    [261.63, 329.63, 392.00], [196.00, 246.94, 392.00],
+    [220.00, 261.63, 329.63], [164.81, 196.00, 246.94],
+    [174.61, 220.00, 261.63], [261.63, 329.63, 392.00],
+    [174.61, 220.00, 261.63], [196.00, 246.94, 293.66]
+];
+const PATTERN = [0, 1, 2, 1, 2, 1, 2, 1];
+
+let audioCtx = null, master = null, fileAudio = null;
+let musicOn = true, musicStarted = false;
+let nextT = 0, chordIdx = 0, stepIdx = 0;
+
+function note(freq, t, dur, vol) {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = "triangle";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    g.connect(master);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+}
+
+function schedule() {
+    while (nextT < audioCtx.currentTime + 0.6) {
+        const ch = CHORDS[chordIdx];
+        if (stepIdx === 0) note(ch[0] / 2, nextT, 1.8, 0.16);
+        note(ch[PATTERN[stepIdx]] * 2, nextT, 0.7, 0.07);
+        stepIdx++;
+        if (stepIdx === PATTERN.length) {
+            stepIdx = 0;
+            chordIdx = (chordIdx + 1) % CHORDS.length;
+        }
+        nextT += 0.4;
+    }
+}
+
+function startMusic() {
+    if (musicStarted) return;
+    musicStarted = true;
+
+    if (FILE_MUSIK) {
+        fileAudio = new Audio(FILE_MUSIK);
+        fileAudio.loop = true;
+        fileAudio.volume = 0.5;
+        fileAudio.play().catch(function () { musicStarted = false; });
+        return;
+    }
+
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+    audioCtx.resume();
+    master = audioCtx.createGain();
+    master.gain.value = 0.8;
+    master.connect(audioCtx.destination);
+    nextT = audioCtx.currentTime + 0.1;
+    setInterval(schedule, 200);
+}
+
+function toggleMusic() {
+    if (!musicStarted) {
+        musicOn = true;
+        startMusic();
+    } else {
+        musicOn = !musicOn;
+        if (fileAudio) { musicOn ? fileAudio.play() : fileAudio.pause(); }
+        else if (audioCtx) { musicOn ? audioCtx.resume() : audioCtx.suspend(); }
+    }
+    $("musicBtn").textContent = musicOn ? "🎵" : "🔇";
+}
+
+$("musicBtn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleMusic();
+});
+
+function firstTap(e) {
+    if (e.target.closest(".tools")) return;
+    if (window.location.hash === "#admin") return;
+    startMusic();
+    document.removeEventListener("click", firstTap);
+}
+document.addEventListener("click", firstTap);
 </script>
 
 </body>
